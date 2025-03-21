@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upper & Lower Color Picker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .color-picker {
+            margin-bottom: 20px;
+        }
+
+        .color-box-container {
+            display: flex;
+        }
+
+        .color-box {
+            width: 100px;
+            height: 100px;
+            margin: 0 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .label {
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upper & Lower Color Picker</h1>
+    <input type="color" id="colorPicker" class="color-picker">
+    <div class="color-box-container">
+        <div id="upperColor" class="color-box"></div>
+        <div id="lowerColor" class="color-box"></div>
+    </div>
+    <div id="upperLabel" class="label">Upper: -</div>
+    <div id="lowerLabel" class="label">Lower: -</div>
+
+    <script>
+        function adjustLightness(color, factor) {
+            let r = color[0] / 255.0, g = color[1] / 255.0, b = color[2] / 255.0;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2.0;
+
+            if (max == min) {
+                h = s = 0;
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2.0 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+
+            l = Math.max(0, Math.min(1, l * factor));
+
+            function hue2rgb(p, q, t) {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            }
+
+            let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            let p = 2 * l - q;
+
+            r = hue2rgb(p, q, h);
+            g = hue2rgb(p, q, h + 1 / 3);
+            b = hue2rgb(p, q, h + 2 / 3);
+
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        document.getElementById('colorPicker').addEventListener('input', function() {
+            let color = this.value;
+            let r = parseInt(color.substr(1, 2), 16);
+            let g = parseInt(color.substr(3, 2), 16);
+            let b = parseInt(color.substr(5, 2), 16);
+            let upper = adjustLightness([r, g, b], 1.3);
+            let lower = adjustLightness([r, g, b], 0.7);
+
+            document.getElementById('upperColor').style.backgroundColor = `rgb(${upper[0]}, ${upper[1]}, ${upper[2]})`;
+            document.getElementById('lowerColor').style.backgroundColor = `rgb(${lower[0]}, ${lower[1]}, ${lower[2]})`;
+
+            document.getElementById('upperLabel').innerText = `Upper: rgb(${upper[0]}, ${upper[1]}, ${upper[2]})`;
+            document.getElementById('lowerLabel').innerText = `Lower: rgb(${lower[0]}, ${lower[1]}, ${lower[2]})`;
+        });
+    </script>
+</body>
+</html>
